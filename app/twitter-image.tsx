@@ -14,11 +14,6 @@ export const contentType = 'image/png'
 
 // Image generation
 export default async function Image() {
-  // Font
-  const interSemiBold = fetch(
-    new URL('https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap', import.meta.url)
-  ).then((res) => res.arrayBuffer())
-
   return new ImageResponse(
     (
       // ImageResponse JSX element
@@ -77,7 +72,7 @@ export default async function Image() {
         <div
           style={{
             fontSize: 64,
-            fontFamily: 'Inter',
+            fontFamily: 'sans-serif',
             fontWeight: 600,
             color: 'white',
             marginBottom: 24,
@@ -91,7 +86,7 @@ export default async function Image() {
         <div
           style={{
             fontSize: 36,
-            fontFamily: 'Inter',
+            fontFamily: 'sans-serif',
             color: 'rgba(255, 255, 255, 0.8)',
             marginBottom: 48,
             textAlign: 'center',
@@ -114,7 +109,7 @@ export default async function Image() {
         <div
           style={{
             fontSize: 24,
-            fontFamily: 'Inter',
+            fontFamily: 'sans-serif',
             color: 'rgba(255, 255, 255, 0.7)',
             textAlign: 'center',
           }}
@@ -125,17 +120,7 @@ export default async function Image() {
     ),
     // ImageResponse options
     {
-      // For convenience, we can re-use the exported opengraph-image
-      // size config to also set the ImageResponse's width and height.
       ...size,
-      fonts: [
-        {
-          name: 'Inter',
-          data: await interSemiBold,
-          style: 'normal',
-          weight: 600,
-        },
-      ],
     }
   )
 } 
