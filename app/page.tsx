@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { MapPin, Phone, Mail, ChevronRight, Star } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,12 +11,161 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 
 export default function Page() {
+  // Steam particles configuration
+  const steamParticles = useRef([
+    // Core steam particles (center column)
+    ...Array.from({ length: 6 }, (_, i) => ({
+      id: `core-${i}`,
+      x: 50 + (Math.random() * 2 - 1), // Slight random horizontal position
+      y: 58 - (i % 2) * 3, // Staggered vertical positions
+      size: 45 + Math.random() * 15,
+      opacity: 0.5 + Math.random() * 0.25, // Higher opacity for core column
+      blur: 'blur-3xl',
+      animationType: 'steam-center',
+      animationDuration: 8 + Math.random() * 2,
+      animationDelay: i * 1.5 + Math.random() * 0.5,
+      scale: 1 + (Math.random() * 0.3)
+    })),
+    
+    // Left drifting particles
+    ...Array.from({ length: 4 }, (_, i) => ({
+      id: `left-${i}`,
+      x: 38 - i * 2 + (Math.random() * 3 - 1.5),
+      y: 62 - i * 1,
+      size: 32 + Math.random() * 10,
+      opacity: 0.35 + Math.random() * 0.2, // Medium-high opacity
+      blur: 'blur-2xl',
+      animationType: 'steam-left',
+      animationDuration: 9 + Math.random() * 2.5,
+      animationDelay: i * 2 + Math.random(),
+      scale: 0.8 + (Math.random() * 0.3)
+    })),
+    
+    // Right drifting particles
+    ...Array.from({ length: 4 }, (_, i) => ({
+      id: `right-${i}`,
+      x: 62 + i * 2 + (Math.random() * 3 - 1.5),
+      y: 62 - i * 1,
+      size: 32 + Math.random() * 10,
+      opacity: 0.35 + Math.random() * 0.2, // Medium-high opacity
+      blur: 'blur-2xl',
+      animationType: 'steam-right',
+      animationDuration: 9 + Math.random() * 2.5,
+      animationDelay: i * 2 + Math.random(),
+      scale: 0.8 + (Math.random() * 0.3)
+    })),
+    
+    // Swirl particles (rotating)
+    ...Array.from({ length: 5 }, (_, i) => ({
+      id: `swirl-${i}`,
+      x: 48 + (i * 1) + (Math.random() * 4 - 2),
+      y: 60 - (i % 3),
+      size: 28 + Math.random() * 12,
+      opacity: 0.3 + Math.random() * 0.15, // Medium opacity
+      blur: i % 2 === 0 ? 'blur-2xl' : 'blur-3xl',
+      animationType: 'steam-swirl',
+      animationDuration: 10 + Math.random() * 3,
+      animationDelay: i * 1.8 + Math.random() * 1.2,
+      scale: 0.9 + (Math.random() * 0.2)
+    })),
+    
+    // Ambient background particles
+    ...Array.from({ length: 12 }, (_, i) => ({
+      id: `ambient-${i}`,
+      x: 30 + (Math.random() * 40),
+      y: 50 + (Math.random() * 20),
+      size: 15 + Math.random() * 20,
+      opacity: 0.08 + Math.random() * 0.12, // Lower opacity for background
+      blur: i % 3 === 0 ? 'blur-3xl' : (i % 3 === 1 ? 'blur-2xl' : 'blur-xl'),
+      animationType: i % 2 === 0 ? 'steam-ambient-1' : 'steam-ambient-2',
+      animationDuration: 12 + Math.random() * 5,
+      animationDelay: i * 1.2 + Math.random() * 2,
+      scale: 0.6 + (Math.random() * 0.4)
+    })),
+    
+    // Foreground pulse particles (breathing effect)
+    ...Array.from({ length: 3 }, (_, i) => ({
+      id: `pulse-${i}`,
+      x: 50 + (Math.random() * 10 - 5),
+      y: 63 - (i * 2),
+      size: 40 + Math.random() * 15,
+      opacity: 0.25 + Math.random() * 0.15, // Medium-high opacity with pulsing effect
+      blur: 'blur-3xl',
+      animationType: 'steam-pulse',
+      animationDuration: 8 + i * 2,
+      animationDelay: i * 3 + Math.random() * 2,
+      scale: 1.2 + (Math.random() * 0.4)
+    }))
+  ]).current;
+  
+  // Custom animation styles
+  const SteamAnimations = () => (
+    <style jsx global>{`
+      /* Center rising steam with slight sway */
+      @keyframes steam-center {
+        0% { transform: translateY(0) scale(1); opacity: 0.5; }
+        30% { transform: translateY(-80px) scale(1.8); opacity: 1.0; }
+        70% { transform: translateY(-160px) translateX(5px) scale(2.3); opacity: 0.85; }
+        100% { transform: translateY(-240px) translateX(-5px) scale(2.8); opacity: 0; }
+      }
+      
+      /* Left drifting steam */
+      @keyframes steam-left {
+        0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.4; }
+        30% { transform: translateY(-60px) translateX(-20px) scale(1.5); opacity: 0.95; }
+        70% { transform: translateY(-140px) translateX(-50px) scale(2.2); opacity: 0.6; }
+        100% { transform: translateY(-220px) translateX(-80px) scale(2.8); opacity: 0; }
+      }
+      
+      /* Right drifting steam */
+      @keyframes steam-right {
+        0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.4; }
+        30% { transform: translateY(-60px) translateX(20px) scale(1.5); opacity: 0.95; }
+        70% { transform: translateY(-140px) translateX(50px) scale(2.2); opacity: 0.6; }
+        100% { transform: translateY(-220px) translateX(80px) scale(2.8); opacity: 0; }
+      }
+      
+      /* Swirling steam */
+      @keyframes steam-swirl {
+        0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.35; }
+        25% { transform: translateY(-50px) rotate(120deg) scale(1.5); opacity: 0.85; }
+        50% { transform: translateY(-100px) rotate(240deg) scale(2); opacity: 0.75; }
+        75% { transform: translateY(-150px) rotate(360deg) scale(2.2); opacity: 0.5; }
+        100% { transform: translateY(-200px) rotate(480deg) scale(2.5); opacity: 0; }
+      }
+      
+      /* Ambient background particles with varied movement */
+      @keyframes steam-ambient-1 {
+        0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.15; }
+        30% { transform: translateY(-40px) translateX(-15px) scale(1.3); opacity: 0.4; }
+        60% { transform: translateY(-100px) translateX(-25px) scale(1.6); opacity: 0.25; }
+        100% { transform: translateY(-180px) translateX(-10px) scale(1.9); opacity: 0; }
+      }
+      
+      @keyframes steam-ambient-2 {
+        0% { transform: translateY(0) translateX(0) scale(1); opacity: 0.15; }
+        30% { transform: translateY(-40px) translateX(15px) scale(1.3); opacity: 0.4; }
+        60% { transform: translateY(-100px) translateX(25px) scale(1.6); opacity: 0.25; }
+        100% { transform: translateY(-180px) translateX(10px) scale(1.9); opacity: 0; }
+      }
+      
+      /* Pulse particles with breathing effect */
+      @keyframes steam-pulse {
+        0% { transform: translateY(0) scale(1); opacity: 0.2; }
+        30% { transform: translateY(-30px) scale(1.7); opacity: 0.6; }
+        50% { transform: translateY(-60px) scale(2); opacity: 0.3; }
+        70% { transform: translateY(-90px) scale(2.3); opacity: 0.5; }
+        100% { transform: translateY(-120px) scale(2.6); opacity: 0; }
+      }
+    `}</style>
+  );
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="fixed top-0 w-full z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center space-x-2">
-            <span className="text-xl font-bold">Montana Sauna Craft</span>
+            <span className="text-xl font-bold">Real Outdoor Solutions</span>
           </div>
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
             <Link href="#services" className="transition-colors hover:text-foreground/80">
@@ -36,7 +186,7 @@ export default function Page() {
       </header>
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative h-screen overflow-hidden">
+        <section className="relative h-screen overflow-hidden hero-section">
           {/* Background layers */}
           <div className="absolute inset-0 z-0">
             <Image
@@ -49,16 +199,110 @@ export default function Page() {
             />
           </div>
           
+          {/* Global animation styles */}
+          <SteamAnimations />
+          
           {/* Steam effect layers */}
           <div className="absolute inset-0 z-10">
             <div className="relative h-full w-full">
-              {[...Array(3)].map((_, i) => (
+              {/* Render all steam particles in layers */}
+              
+              {/* Render background ambient layer first */}
+              {steamParticles
+                .filter(p => p.id.includes('ambient'))
+                .map(particle => (
                 <div
-                  key={i}
-                  className="absolute top-1/2 left-1/4 w-24 h-24 bg-white/10 rounded-full blur-xl animate-steam"
+                  key={particle.id}
+                  className={`absolute ${particle.blur} rounded-full`}
                   style={{
-                    animationDelay: `${i * 1}s`,
-                    left: `${25 + i * 20}%`
+                    top: `${particle.y}%`,
+                    left: `${particle.x}%`,
+                    width: `${particle.size}px`,
+                    height: `${particle.size}px`,
+                    backgroundColor: `rgba(255, 255, 255, ${particle.opacity})`,
+                    transform: `translate(-50%, -50%) scale(${particle.scale})`,
+                    animation: `${particle.animationType} ${particle.animationDuration}s ease-in-out infinite`,
+                    animationDelay: `${particle.animationDelay}s`,
+                  }}
+                />
+              ))}
+              
+              {/* Render pulse layer */}
+              {steamParticles
+                .filter(p => p.id.includes('pulse'))
+                .map(particle => (
+                <div
+                  key={particle.id}
+                  className={`absolute ${particle.blur} rounded-full`}
+                  style={{
+                    top: `${particle.y}%`,
+                    left: `${particle.x}%`,
+                    width: `${particle.size}px`,
+                    height: `${particle.size}px`,
+                    backgroundColor: `rgba(255, 255, 255, ${particle.opacity})`,
+                    transform: `translate(-50%, -50%) scale(${particle.scale})`,
+                    animation: `${particle.animationType} ${particle.animationDuration}s ease-in-out infinite`,
+                    animationDelay: `${particle.animationDelay}s`,
+                  }}
+                />
+              ))}
+              
+              {/* Render left and right drift layers */}
+              {steamParticles
+                .filter(p => p.id.includes('left') || p.id.includes('right'))
+                .map(particle => (
+                <div
+                  key={particle.id}
+                  className={`absolute ${particle.blur} rounded-full`}
+                  style={{
+                    top: `${particle.y}%`,
+                    left: `${particle.x}%`,
+                    width: `${particle.size}px`,
+                    height: `${particle.size}px`,
+                    backgroundColor: `rgba(255, 255, 255, ${particle.opacity})`,
+                    transform: `translate(-50%, -50%) scale(${particle.scale})`,
+                    animation: `${particle.animationType} ${particle.animationDuration}s ease-in-out infinite`,
+                    animationDelay: `${particle.animationDelay}s`,
+                  }}
+                />
+              ))}
+              
+              {/* Render swirl layer */}
+              {steamParticles
+                .filter(p => p.id.includes('swirl'))
+                .map(particle => (
+                <div
+                  key={particle.id}
+                  className={`absolute ${particle.blur} rounded-full`}
+                  style={{
+                    top: `${particle.y}%`,
+                    left: `${particle.x}%`,
+                    width: `${particle.size}px`,
+                    height: `${particle.size}px`,
+                    backgroundColor: `rgba(255, 255, 255, ${particle.opacity})`,
+                    transform: `translate(-50%, -50%) scale(${particle.scale})`,
+                    animation: `${particle.animationType} ${particle.animationDuration}s ease-in-out infinite`,
+                    animationDelay: `${particle.animationDelay}s`,
+                  }}
+                />
+              ))}
+              
+              {/* Render core layer (on top) */}
+              {steamParticles
+                .filter(p => p.id.includes('core'))
+                .map(particle => (
+                <div
+                  key={particle.id}
+                  className={`absolute ${particle.blur} rounded-full`}
+                  style={{
+                    top: `${particle.y}%`,
+                    left: `${particle.x}%`,
+                    width: `${particle.size}px`,
+                    height: `${particle.size}px`,
+                    backgroundColor: `rgba(255, 255, 255, ${particle.opacity})`,
+                    transform: `translate(-50%, -50%) scale(${particle.scale})`,
+                    animation: `${particle.animationType} ${particle.animationDuration}s ease-in-out infinite`,
+                    animationDelay: `${particle.animationDelay}s`,
                   }}
                 />
               ))}
@@ -85,7 +329,7 @@ export default function Page() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="border-white text-white hover:bg-white/10 text-lg px-8"
+                  className="border-white text-primary hover:text-white hover:bg-white/10 text-lg px-8"
                 >
                   View Our Work
                 </Button>
@@ -113,24 +357,29 @@ export default function Page() {
                 {
                   title: "Custom Indoor Saunas",
                   description: "Perfectly fitted saunas designed for your home's interior space.",
+                  image: "/images/indoor-sauna.webp"
                 },
                 {
                   title: "Outdoor Sauna Rooms",
                   description: "Standalone sauna buildings with stunning views of Montana's landscape.",
+                  image: "/images/outdoor-sauna.webp"
                 },
                 {
                   title: "Commercial Saunas",
                   description: "Large-scale sauna solutions for hotels, spas, and wellness centers.",
+                  image: "/images/commercial-sauna.webp"
                 },
               ].map((service, index) => (
-                <Card key={index} className="relative overflow-hidden">
+                <Card key={index} className="relative overflow-hidden group">
                   <CardContent className="p-6 space-y-4">
-                    <div className="h-48 relative mb-4">
+                    <div className="h-48 relative mb-4 overflow-hidden rounded-md">
                       <Image
-                        src={`/placeholder.svg?height=400&width=600`}
+                        src={service.image}
                         alt={service.title}
                         fill
-                        className="rounded-md object-cover"
+                        unoptimized
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, 33vw"
                       />
                     </div>
                     <h3 className="text-xl font-bold">{service.title}</h3>
@@ -153,14 +402,37 @@ export default function Page() {
               Featured Projects
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="relative aspect-square overflow-hidden rounded-lg">
-                  <Image
-                    src={`/placeholder.svg?height=600&width=600`}
-                    alt={`Featured project ${i + 1}`}
-                    fill
-                    className="object-cover transition-transform hover:scale-105"
-                  />
+              {[
+                {
+                  title: "Lakeside Sauna Retreat",
+                  color: "bg-primary/20"
+                },
+                {
+                  title: "Mountain View Cedar Sauna",
+                  color: "bg-secondary/20"
+                },
+                {
+                  title: "Modern Home Spa Suite",
+                  color: "bg-primary/30"
+                },
+                {
+                  title: "Wilderness Cabin Sauna",
+                  color: "bg-secondary/30"
+                },
+                {
+                  title: "Nordic-Style Community Sauna",
+                  color: "bg-primary/40"
+                },
+                {
+                  title: "Luxury Hotel Wellness Center",
+                  color: "bg-secondary/40"
+                }
+              ].map((project, i) => (
+                <div key={i} className="relative aspect-square overflow-hidden rounded-lg group">
+                  <div className={`absolute inset-0 ${project.color} transition-opacity duration-500`}></div>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-black/60">
+                    <p className="text-white text-lg font-medium text-center px-4">{project.title}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -248,7 +520,7 @@ export default function Page() {
       <footer className="border-t py-12">
         <div className="container grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-4">
-            <h3 className="text-lg font-bold">Montana Sauna Craft</h3>
+            <h3 className="text-lg font-bold">Real Outdoor Solutions</h3>
             <p className="text-sm text-muted-foreground">
               Custom sauna solutions crafted with precision and care in the Flathead Valley.
             </p>
@@ -281,24 +553,52 @@ export default function Page() {
           <div>
             <h4 className="text-sm font-bold mb-4">Service Areas</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li>Whitefish</li>
-              <li>Kalispell</li>
-              <li>Columbia Falls</li>
-              <li>Bigfork</li>
+              <li>
+                <Link href="#services" className="hover:text-foreground">
+                  Whitefish
+                </Link>
+              </li>
+              <li>
+                <Link href="#services" className="hover:text-foreground">
+                  Kalispell
+                </Link>
+              </li>
+              <li>
+                <Link href="#services" className="hover:text-foreground">
+                  Columbia Falls
+                </Link>
+              </li>
+              <li>
+                <Link href="#services" className="hover:text-foreground">
+                  Bigfork
+                </Link>
+              </li>
             </ul>
           </div>
           <div>
             <h4 className="text-sm font-bold mb-4">Connect</h4>
             <ul className="space-y-3 text-sm text-muted-foreground">
-              <li>Facebook</li>
-              <li>Instagram</li>
-              <li>Houzz</li>
+              <li>
+                <Link href="https://facebook.com" target="_blank" className="hover:text-foreground flex items-center gap-2">
+                  Facebook
+                </Link>
+              </li>
+              <li>
+                <Link href="https://instagram.com" target="_blank" className="hover:text-foreground flex items-center gap-2">
+                  Instagram
+                </Link>
+              </li>
+              <li>
+                <Link href="https://houzz.com" target="_blank" className="hover:text-foreground flex items-center gap-2">
+                  Houzz
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
         <div className="container mt-8 pt-8 border-t">
           <p className="text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Montana Sauna Craft. All rights reserved.
+            © {new Date().getFullYear()} Real Outdoor Solutions. All rights reserved.
           </p>
         </div>
       </footer>
